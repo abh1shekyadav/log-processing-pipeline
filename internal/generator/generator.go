@@ -1,20 +1,27 @@
 package generator
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/abh1shekyadav/log-processing-pipeline/internal/pipeline"
 )
 
-func GenerateLogs(out chan<- pipeline.Log, count int) {
+func GenerateLogs(ctx context.Context, out chan<- pipeline.Log, count int) {
+	defer close(out)
 	for i := 1; i <= count; i++ {
-		log := pipeline.Log{
-			ID:      i,
-			Message: fmt.Sprintf("Log message #%d", i),
+		select {
+		case <-ctx.Done():
+			fmt.Println("[GENERATOR] Context canceled — stopping log generation.")
+			return
+		default:
+			log := pipeline.Log{
+				ID:      i,
+				Message: fmt.Sprintf("Log message #%d", i),
+			}
+			out <- log
+			time.Sleep(200 * time.Millisecond)
 		}
-		out <- log
-		time.Sleep(200 * time.Millisecond)
 	}
-	close(out)
 }
