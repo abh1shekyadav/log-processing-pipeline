@@ -11,6 +11,7 @@ import (
 
 func main() {
 
+	fmt.Println("[MAIN] Starting LogStream...")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -19,5 +20,5 @@ func main() {
 	if err := app.Run(ctx); err != nil {
 		log.Fatalf("Pipeline stopped with error: %v", err)
 	}
-	fmt.Println("Pipeline finished.")
+	fmt.Println("[MAIN] Shutdown complete.")
 }

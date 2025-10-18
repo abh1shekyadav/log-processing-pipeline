@@ -7,16 +7,16 @@ import (
 	"github.com/abh1shekyadav/log-processing-pipeline/internal/pipeline"
 )
 
-func AggregateResults(ctx context.Context, in <-chan pipeline.Log) {
+func AggregateResults(ctx context.Context, in <-chan pipeline.Log) error {
 	for {
 		select {
 		case <-ctx.Done():
 			fmt.Println("[AGGREGATOR] Context canceled — stopping aggregation.")
-			return
+			return ctx.Err()
 		case log, ok := <-in:
 			if !ok {
 				fmt.Println("[AGGREGATOR] All logs processed.")
-				return
+				return nil
 			}
 			fmt.Printf("[AGGREGATOR] %v at %v\n", log.Message, log.Timestamp.Format("15:04:05"))
 		}
