@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/abh1shekyadav/log-processing-pipeline/internal/metrics"
 	"github.com/abh1shekyadav/log-processing-pipeline/internal/pipeline"
 )
 
@@ -18,6 +19,7 @@ func AggregateResults(ctx context.Context, in <-chan pipeline.Log) error {
 				fmt.Println("[AGGREGATOR] All logs processed.")
 				return nil
 			}
+			metrics.IncAggregated()
 			fmt.Printf("[AGGREGATOR] %v at %v\n", log.Message, log.Timestamp.Format("15:04:05"))
 		}
 	}

@@ -60,6 +60,6 @@ func processLog(workerID int, log pipeline.Log) pipeline.Log {
 	log.Message = fmt.Sprintf("[Worker-%d] %s", workerID, log.Message)
 	log.Processed = true
 	log.Timestamp = time.Now()
-	metrics.IncGenerated()
+	metrics.IncProcessed()
 	return log
 }
