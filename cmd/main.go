@@ -1,25 +1,24 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 
-	"github.com/abh1shekyadav/log-processing-pipeline/internal/consumer"
-	"github.com/abh1shekyadav/log-processing-pipeline/internal/generator"
-	"github.com/abh1shekyadav/log-processing-pipeline/internal/pipeline"
-	"github.com/abh1shekyadav/log-processing-pipeline/internal/workerpool"
+	"github.com/abh1shekyadav/log-processing-pipeline/internal/app"
+	"github.com/abh1shekyadav/log-processing-pipeline/internal/shutdown"
 )
 
 func main() {
-	fmt.Println("Starting LogStream")
 
-	jobs := make(chan pipeline.Log, 10)
-	results := make(chan pipeline.Log, 10)
+	fmt.Println("[MAIN] Starting LogStream...")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	go generator.GenerateLogs(jobs, 15)
+	go shutdown.Listen(cancel)
 
-	wp := workerpool.Workerpool{NumWorkers: 3}
-	go wp.ProcessLogs(jobs, results)
-
-	consumer.AggregateResults(results)
-	fmt.Println("Pipeline finished.")
+	if err := app.Run(ctx); err != nil {
+		log.Fatalf("Pipeline stopped with error: %v", err)
+	}
+	fmt.Println("[MAIN] Shutdown complete.")
 }
