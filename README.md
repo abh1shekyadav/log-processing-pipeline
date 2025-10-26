@@ -1,4 +1,3 @@
-# log-processing-pipeline
 # 🚀 Log Processing Pipeline (Golang)
 
 A concurrent **log processing pipeline** written in Go, demonstrating **channels**, **context cancellation**, **rate limiting**, **batching**, **worker pools**, and **real-time metrics** — all orchestrated cleanly for multiple independent pipelines.
