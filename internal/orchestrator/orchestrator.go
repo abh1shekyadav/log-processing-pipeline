@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/abh1shekyadav/log-processing-pipeline/internal/consumer"
 	"github.com/abh1shekyadav/log-processing-pipeline/internal/generator"
 	"github.com/abh1shekyadav/log-processing-pipeline/internal/pipeline"
+	"github.com/abh1shekyadav/log-processing-pipeline/internal/workerpool"
 )
 
 type PipelineConfig struct {
@@ -69,4 +71,43 @@ func runOnePipeline(ctx context.Context, cfg PipelineConfig, errCh chan<- error)
 		close(jobs)
 	}()
 
+	wp := workerpool.Workerpool{NumWorkers: cfg.NumWorkers}
+
+	wpDone := make(chan error, 1)
+	go func() {
+		err := wp.ProcessLogs(ctx, jobs, results)
+		wpDone <- err
+	}()
+
+	aggDone := make(chan error, 1)
+	go func() {
+		aggDone <- consumer.AggregateResults(ctx, results)
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println(prefix, "context canceled; stopping pipeline")
+			return ctx.Err()
+		case err := <-genDone:
+			if err != nil {
+				return fmt.Errorf("generator failed: %w", err)
+			}
+			genDone = nil
+			fmt.Println(prefix, "generator finished")
+		case err := <-wpDone:
+			if err != nil {
+				return fmt.Errorf("workerpool failed: %w", err)
+			}
+			wpDone = nil
+			fmt.Println(prefix, "workerpool finished")
+		case err := <-aggDone:
+			if err != nil {
+				return fmt.Errorf("aggregator failed: %w", err)
+			}
+			aggDone = nil
+			fmt.Println(prefix, "aggregator finished; pipeline complete")
+			return nil
+		}
+	}
 }
